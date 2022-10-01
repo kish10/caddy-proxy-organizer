@@ -1,0 +1,10 @@
+# version: '3.8'
+
+services: 
+  caddy-proxy:
+    # build:
+    #   dockerfile: Dockerfile--cady-proxy-test
+    image: caddy:latest
+    labels:
+      webserver-component: 'caddy-proxy-test'
+  
