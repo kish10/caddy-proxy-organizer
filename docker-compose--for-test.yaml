@@ -8,5 +8,6 @@ services:
   caddy-organizer:
     build:
       dockerfile: Dockerfile--for-test--cady-proxy-organizer
+    depends_on: ["caddy-proxy"]
     labels:
       webserver-component: 'caddy-proxy-organizer'
