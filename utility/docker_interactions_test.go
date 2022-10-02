@@ -1,13 +1,12 @@
-package utilities
+package utility
 
 import (
 	"context"
 	"testing"
 )
 
+const composeFilePath = "../docker-compose--for-test.yaml"
 var ctx = context.Background()
-// const composeFilePath = "../docker-compose--for-test.yaml"
-const composeFilePath = "/home/k/programming/caddy-proxy-organizer/docker-compose--for-test.yaml"
 const labelKeyServerContainer = "webserver-component"
 const labelValueCaddyProxy = "caddy-proxy"
 

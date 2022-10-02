@@ -1,4 +1,4 @@
-package utilities
+package utility
 
 import (
 	"context"
@@ -66,21 +66,21 @@ func GetContainersByLabel(ctx context.Context, cli *client.Client, labelKeyValue
 }
 
 type RunDockerComposeParams struct {
-	composeFilePaths []string
-	rebuild bool
+	ComposeFilePaths []string
+	Rebuild bool
 }
 
 // RunDockerCompose up calls the shell process "docker compose -f <file_path> up -d"
 func RunDockerComposeUp(ctx context.Context, args RunDockerComposeParams) {
 	composefilePathFlags := []string{}
-	for _, filePath := range args.composeFilePaths {
+	for _, filePath := range args.ComposeFilePaths {
 		composefilePathFlags = append(composefilePathFlags, "-f", filePath)
 	}
 
 	cmdArgs := []string{"docker", "compose"}
 	cmdArgs = append(cmdArgs, composefilePathFlags...)
 	cmdArgs = append(cmdArgs, "up", "-d")
-	if args.rebuild {
+	if args.Rebuild {
 		cmdArgs = append(cmdArgs, "--build")
 	}
 
