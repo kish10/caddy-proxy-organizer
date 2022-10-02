@@ -8,6 +8,7 @@ import (
 	"github.com/docker/docker/client"
 )
 
+
 // gets Docker client
 func GetDockerClient() *client.Client {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -64,12 +65,32 @@ func GetContainersByLabel(ctx context.Context, cli *client.Client, labelArgs...s
 	return containersWithLabel
 }
 
+type RunDockerComposeParams struct {
+	composeFilePaths []string
+	rebuild bool
+}
+
 // runDockerCompose up calls the shell process "docker compose -f <file_path> up -d"
-func runDockerComposeUp(filePath string) {
-	cmd := exec.Command("docker", "compose", "-f", filePath, "up", "-d")
-	if err := cmd.Run(); err != nil {
-		panic(err)
+func runDockerComposeUp(ctx context.Context, args RunDockerComposeParams) {
+	composefilePathFlags := []string{}
+	for _, filePath := range args.composeFilePaths {
+		composefilePathFlags = append(composefilePathFlags, "-f", filePath)
 	}
+
+	cmdArgs := []string{"docker", "compose"}
+	cmdArgs = append(cmdArgs, composefilePathFlags...)
+	cmdArgs = append(cmdArgs, "up", "-d")
+	if args.rebuild {
+		cmdArgs = append(cmdArgs, "--build")
+	}
+
+	cmd := exec.CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
+	InfoLog.Printf("\nAbout to run `docker compose up` with command:\n %s\n", cmd)
+	stdoutStderr, err := cmd.CombinedOutput()
+	if (err != nil) && (err.Error() != "exec: already started") {
+		ErrorLog.Fatal(err)
+	}
+	InfoLog.Printf("\nResulting output from running `docker compose up` command:\n%s\n", stdoutStderr)
 }
 
 

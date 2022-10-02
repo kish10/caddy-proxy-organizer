@@ -1,19 +1,20 @@
 package utilities
 
-// github.com/kish10/caddy_proxy_organizer/
-
 import (
 	"context"
 	"testing"
 )
 
 var ctx = context.Background()
+// const composeFilePath = "../docker-compose--for-test.yaml"
+const composeFilePath = "/home/k/programming/caddy-proxy-organizer/docker-compose--for-test.yaml"
+const serverContainerLabelsKey = "webserver-component"
 
 func TestGetContainersAll(t *testing.T) {
 	// -- Test if can capture any running containers
 
 	// Make sure atleast one container is running
-	runDockerComposeUp("docker-compose--for-test.yaml")
+	runDockerComposeUp(ctx, RunDockerComposeParams{[]string{composeFilePath}, false})
 
 	containers := GetContainersAll(ctx, nil)
 	if len(containers) == 0 {
@@ -25,9 +26,9 @@ func TextGetContainersByLabel(t *testing.T) {
 	// -- Test if can get any containers with the label
 
 	// Start containers
-	runDockerComposeUp("docker-compose--for-test.yaml")
+	runDockerComposeUp(ctx, RunDockerComposeParams{[]string{composeFilePath}, false})
 
-	labelKey := "webserver-component"
+	labelKey := serverContainerLabelsKey
 	labelArgs := []string{labelKey, ""}
 	containers := GetContainersByLabel(ctx, nil, labelArgs...)
 	if len(containers) == 0 {
@@ -46,9 +47,9 @@ func TestStopContainersByLabel(t *testing.T) {
 	// -- Test if can stop containers by labelKey
 
 	// Start containers
-	runDockerComposeUp("docker-compose--for-test.yaml")
+	runDockerComposeUp(ctx, RunDockerComposeParams{[]string{composeFilePath}, false})
 
-	labelArgs := []string{"webserver-component", ""}
+	labelArgs := []string{serverContainerLabelsKey, ""}
 
 	// Stop all "webserver-component" labeled containers
 	StopContainersByLabel(ctx, nil, labelArgs...)
