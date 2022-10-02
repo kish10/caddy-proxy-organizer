@@ -42,9 +42,9 @@ func GetContainersAll(ctx context.Context, cli *client.Client) []types.Container
 }
 
 // GetContainersByLabel gets list of running containers with the given label identifiers
-func GetContainersByLabel(ctx context.Context, cli *client.Client, labelArgs...string) []types.Container {
-	labelKey := labelArgs[0]
-	labelValue := labelArgs[1]
+func GetContainersByLabel(ctx context.Context, cli *client.Client, labelKeyValue []string) []types.Container {
+	labelKey := labelKeyValue[0]
+	labelValue := labelKeyValue[1]
 
 	needKeyAndValue := (labelKey != "") && (labelValue != "")
 
@@ -70,8 +70,8 @@ type RunDockerComposeParams struct {
 	rebuild bool
 }
 
-// runDockerCompose up calls the shell process "docker compose -f <file_path> up -d"
-func runDockerComposeUp(ctx context.Context, args RunDockerComposeParams) {
+// RunDockerCompose up calls the shell process "docker compose -f <file_path> up -d"
+func RunDockerComposeUp(ctx context.Context, args RunDockerComposeParams) {
 	composefilePathFlags := []string{}
 	for _, filePath := range args.composeFilePaths {
 		composefilePathFlags = append(composefilePathFlags, "-f", filePath)
@@ -94,13 +94,13 @@ func runDockerComposeUp(ctx context.Context, args RunDockerComposeParams) {
 }
 
 
-func StopContainersByLabel(ctx context.Context, cli *client.Client, labelArgs...string) {
+func StopContainersByLabel(ctx context.Context, cli *client.Client, labelKeyValue []string) {
 	
 	if cli == nil {
 		cli = GetDockerClient()
 	}
 
-	for _, container := range GetContainersByLabel(ctx, cli, labelArgs...) {
+	for _, container := range GetContainersByLabel(ctx, cli, labelKeyValue) {
 		if err := cli.ContainerStop(ctx, container.ID, nil); err != nil {
 			panic(err)
 		}

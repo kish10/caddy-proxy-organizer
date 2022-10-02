@@ -8,13 +8,14 @@ import (
 var ctx = context.Background()
 // const composeFilePath = "../docker-compose--for-test.yaml"
 const composeFilePath = "/home/k/programming/caddy-proxy-organizer/docker-compose--for-test.yaml"
-const serverContainerLabelsKey = "webserver-component"
+const labelKeyServerContainer = "webserver-component"
+const labelValueCaddyProxy = "caddy-proxy"
 
 func TestGetContainersAll(t *testing.T) {
 	// -- Test if can capture any running containers
 
 	// Make sure atleast one container is running
-	runDockerComposeUp(ctx, RunDockerComposeParams{[]string{composeFilePath}, false})
+	RunDockerComposeUp(ctx, RunDockerComposeParams{[]string{composeFilePath}, false})
 
 	containers := GetContainersAll(ctx, nil)
 	if len(containers) == 0 {
@@ -22,22 +23,51 @@ func TestGetContainersAll(t *testing.T) {
 	}
 }
 
-func TextGetContainersByLabel(t *testing.T) {
+func TestGetContainersByLabel(t *testing.T) {
 	// -- Test if can get any containers with the label
 
 	// Start containers
-	runDockerComposeUp(ctx, RunDockerComposeParams{[]string{composeFilePath}, false})
+	RunDockerComposeUp(ctx, RunDockerComposeParams{[]string{composeFilePath}, false})
 
-	labelKey := serverContainerLabelsKey
-	labelArgs := []string{labelKey, ""}
-	containers := GetContainersByLabel(ctx, nil, labelArgs...)
-	if len(containers) == 0 {
-		t.Errorf("Result returned with no running containers of label key %s", labelKey)
+	cases := map[int][]string{
+		1: []string{labelKeyServerContainer, ""},
+		2: []string{"", labelValueCaddyProxy},
+		3: []string{labelKeyServerContainer, labelValueCaddyProxy},
 	}
-	for _, container := range containers {
-		for k,_ := range container.Labels {
-			if k != labelKey {
-				t.Errorf("Tried get containers with label key %s, but got a container with key %s", labelKey, k)
+
+	for caseNum, labelKeyValue := range cases {
+		containers := GetContainersByLabel(ctx, nil, labelKeyValue)
+
+		if len(containers) == 0 {
+			t.Errorf("Result returned with no running containers of label key `%s` & value `%s`", labelKeyValue[0], labelKeyValue[1])
+		}
+
+		for _, container := range containers {
+			keyFound := false
+			valueFound := false
+			for k,v := range container.Labels {
+				
+				if k == labelKeyValue[0] {
+					keyFound = true
+				}
+
+				if v == labelKeyValue[1] {
+					valueFound = true
+				}
+			}
+
+			testFail := false
+			switch {
+			case caseNum == 1 && !keyFound:
+				testFail = true
+			case caseNum == 2 && !valueFound:
+				testFail = true
+			case caseNum == 3 && !keyFound && !valueFound:
+				testFail = true
+			}
+	
+			if testFail {
+				t.Errorf("Tried get containers with label key `%s` & value `%s`, but got a container without any of those", labelKeyValue[0], labelKeyValue[1])
 			}
 		}
 	}
@@ -47,14 +77,14 @@ func TestStopContainersByLabel(t *testing.T) {
 	// -- Test if can stop containers by labelKey
 
 	// Start containers
-	runDockerComposeUp(ctx, RunDockerComposeParams{[]string{composeFilePath}, false})
+	RunDockerComposeUp(ctx, RunDockerComposeParams{[]string{composeFilePath}, false})
 
-	labelArgs := []string{serverContainerLabelsKey, ""}
+	labelKeyValue := []string{labelKeyServerContainer, ""}
 
 	// Stop all "webserver-component" labeled containers
-	StopContainersByLabel(ctx, nil, labelArgs...)
+	StopContainersByLabel(ctx, nil, labelKeyValue)
 
-	containers := GetContainersByLabel(ctx, nil, labelArgs...)
+	containers := GetContainersByLabel(ctx, nil, labelKeyValue)
 	if len(containers) > 0 {
 		t.Error("Result returned with no running containers")
 	}
