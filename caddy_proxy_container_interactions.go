@@ -24,7 +24,7 @@ func GetCaddyProxyContainer(ctx context.Context, cli *client.Client) types.Conta
 
 
 
-func LoadCaddyProxyJson(ctx context.Context, cli *client.Client, ) {
+func LoadCaddyProxyJson(ctx context.Context, cli *client.Client) {
 	// pathCadyProxyJson string
 	// if pathCadyProxyJson == "" {
 	// 	pathCadyProxyJson = pathCaddyProxyConfigJson()

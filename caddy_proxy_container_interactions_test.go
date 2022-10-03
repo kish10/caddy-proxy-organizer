@@ -37,5 +37,5 @@ func TestGetCaddyProxyContainer(t *testing.T) {
 
 func TestLoadCaddyProxyJson(t *testing.T) {
 	// -- Test if compiles
-	LoadCaddyProxyJson(ctx, nil, pathCadyProxyJson)
+	LoadCaddyProxyJson(ctx, nil)
 }
