@@ -96,7 +96,7 @@ func RunDockerComposeUp(ctx context.Context, args RunDockerComposeParams) {
 	InfoLog.Printf("\nResulting output from running `docker compose up` command:\n%s\n", stdoutStderr)
 }
 
-
+// ErrorExecCmdBadExit throws an error when the command run through Docker Exec exits ungracefully
 type ErrorExecCmdBadExit struct {
 	err error
 	ContainerId string
@@ -117,16 +117,22 @@ func (e *ErrorExecCmdBadExit) Error() string {
 
 
 // DockerExec executes a command on the given container
+// Reference: 
+// - https://github.com/moby/moby/blob/master/client/container_exec.go
+// - https://stackoverflow.com/a/57132902
 func RunDockerExec(ctx context.Context, cli *client.Client, containerId string, execConfig types.ExecConfig) error {
 	if cli == nil {
 		cli = GetDockerClient()
 	}
 	
-	execConfig.AttachStdin = true
-	execConfig.AttachStderr = true
+	// NOTE (2022-10-02): At the moment these are not needed for ContainerExecAttach
+	// DO NOT DELETE: Left as reference
+	// DELETE WHEN : Discover that the settings are independent to ContainerExecAttach (or when comfortable) 
+	// execConfig.AttachStdin = true
+	// execConfig.AttachStderr = true
 
 
-	// -- Run Docker Exec
+	// -- Run command on the container using Docker Exec
 	InfoLog.Printf(
 		"\nAbout to create Exec instance on container %s, with command:\n%s\n", 
 		containerId,
@@ -147,13 +153,16 @@ func RunDockerExec(ctx context.Context, cli *client.Client, containerId string, 
 	for scanner.Scan() {
 		attachBufferOutput = attachBufferOutput + scanner.Text()
 	}
-	// attachBufferOutput, _ := responseExecAttach.Reader.ReadString(io.EOF)
 	InfoLog.Print("\nExec Attach output:\n", attachBufferOutput)
 
-	err = cli.ContainerExecStart(ctx, responseExecCreate.ID, types.ExecStartCheck{})
-	if err != nil {
-		ErrorLog.Fatal(err)
-	}
+
+	// Note (2022-10-02):  ContainerExecAttach, seems to also start the contaner
+	// Reference: https://github.com/moby/moby/blob/master/client/container_exec.go
+	// DELETE WHEN: Comfortable with only using ContainerExecAttach
+	// err = cli.ContainerExecStart(ctx, responseExecCreate.ID, types.ExecStartCheck{})
+	// if err != nil {
+	// 	ErrorLog.Fatal(err)
+	// }
 	
 
 	// -- Check whether Exec call exited gracefully 
@@ -162,15 +171,16 @@ func RunDockerExec(ctx context.Context, cli *client.Client, containerId string, 
 	if errExecInspect != nil {
 		ErrorLog.Fatal(errExecInspect)
 	}
-	InfoLog.Printf("\nExec Exit Code: %d", responseExecInspect.ExitCode)
+	
 	if execExitCode := responseExecInspect.ExitCode; execExitCode > 0 {
-		// ErrorLog.Fatalf("Executing command failed with exit code %d", execExitCode)
 		return &ErrorExecCmdBadExit{
 			ContainerId: containerId,
 			Cmd: strings.Join(execConfig.Cmd, " "),
 			CmdOutput: attachBufferOutput,
 			ExitCode: execExitCode,
 		}
+	} else {
+		InfoLog.Printf("\nCommand ran through Docker Exec exited gracefully (exit code: %d) ", responseExecInspect.ExitCode)
 	}
 
 	return nil
