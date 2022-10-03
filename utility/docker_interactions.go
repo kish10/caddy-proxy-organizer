@@ -1,15 +1,18 @@
 package utility
 
 import (
+	"bufio"
 	"context"
+	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 )
 
 
-// gets Docker client
+// GetDockerClient gets the Docker client
 func GetDockerClient() *client.Client {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -92,6 +95,87 @@ func RunDockerComposeUp(ctx context.Context, args RunDockerComposeParams) {
 	}
 	InfoLog.Printf("\nResulting output from running `docker compose up` command:\n%s\n", stdoutStderr)
 }
+
+
+type ErrorExecCmdBadExit struct {
+	err error
+	ContainerId string
+	Cmd string
+	CmdOutput string
+	ExitCode int
+}
+
+func (e *ErrorExecCmdBadExit) Error() string {
+    return fmt.Sprintf(
+		"\nTried to run command:\n %s\n On containerId %s, but got exit code %d, run output:\n%s\n",
+		e.ContainerId,
+		e.Cmd,
+		e.ExitCode,
+		e.CmdOutput,
+	)
+}
+
+
+// DockerExec executes a command on the given container
+func RunDockerExec(ctx context.Context, cli *client.Client, containerId string, execConfig types.ExecConfig) error {
+	if cli == nil {
+		cli = GetDockerClient()
+	}
+	
+	execConfig.AttachStdin = true
+	execConfig.AttachStderr = true
+
+
+	// -- Run Docker Exec
+	InfoLog.Printf(
+		"\nAbout to create Exec instance on container %s, with command:\n%s\n", 
+		containerId,
+		strings.Join(execConfig.Cmd, "\n"),
+	)
+	responseExecCreate, err := cli.ContainerExecCreate(ctx, containerId, execConfig)
+	if err != nil {
+		ErrorLog.Fatal(err)
+	}
+
+	responseExecAttach, errExecAttach := cli.ContainerExecAttach(ctx, responseExecCreate.ID, types.ExecStartCheck{}) 
+	defer responseExecAttach.Close()
+	if errExecAttach != nil {
+		ErrorLog.Fatal(err)
+	}
+	scanner := bufio.NewScanner(responseExecAttach.Reader)
+	attachBufferOutput := ""
+	for scanner.Scan() {
+		attachBufferOutput = attachBufferOutput + scanner.Text()
+	}
+	// attachBufferOutput, _ := responseExecAttach.Reader.ReadString(io.EOF)
+	InfoLog.Print("\nExec Attach output:\n", attachBufferOutput)
+
+	err = cli.ContainerExecStart(ctx, responseExecCreate.ID, types.ExecStartCheck{})
+	if err != nil {
+		ErrorLog.Fatal(err)
+	}
+	
+
+	// -- Check whether Exec call exited gracefully 
+
+	responseExecInspect, errExecInspect := cli.ContainerExecInspect(ctx, responseExecCreate.ID) 
+	if errExecInspect != nil {
+		ErrorLog.Fatal(errExecInspect)
+	}
+	InfoLog.Printf("\nExec Exit Code: %d", responseExecInspect.ExitCode)
+	if execExitCode := responseExecInspect.ExitCode; execExitCode > 0 {
+		// ErrorLog.Fatalf("Executing command failed with exit code %d", execExitCode)
+		return &ErrorExecCmdBadExit{
+			ContainerId: containerId,
+			Cmd: strings.Join(execConfig.Cmd, " "),
+			CmdOutput: attachBufferOutput,
+			ExitCode: execExitCode,
+		}
+	}
+
+	return nil
+}
+
 
 
 func StopContainersByLabel(ctx context.Context, cli *client.Client, labelKeyValue []string) {

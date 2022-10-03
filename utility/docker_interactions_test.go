@@ -2,7 +2,10 @@ package utility
 
 import (
 	"context"
+	"errors"
 	"testing"
+
+	"github.com/docker/docker/api/types"
 )
 
 const composeFilePath = "../docker-compose--for-test.yaml"
@@ -69,6 +72,41 @@ func TestGetContainersByLabel(t *testing.T) {
 				t.Errorf("Tried get containers with label key `%s` & value `%s`, but got a container without any of those", labelKeyValue[0], labelKeyValue[1])
 			}
 		}
+	}
+}
+
+func TestRunDockerExec(t *testing.T) {
+	// Start containers
+	RunDockerComposeUp(ctx, RunDockerComposeParams{[]string{composeFilePath}, false})
+
+	// Get a container
+	container := GetContainersByLabel(
+		ctx, 
+		nil, 
+		[]string{labelKeyServerContainer, labelValueCaddyProxy},
+	)[0]
+
+
+	// -- Test if Exec command can succeed
+
+	execConfig := types.ExecConfig{
+		Cmd: []string{"echo", "Hello World!"},
+	}
+	RunDockerExec(ctx, nil, container.ID, execConfig)
+
+
+	// -- Test if error is thrown when Exec cmd exits ungracefully
+
+	execConfig = types.ExecConfig{
+		Cmd: []string{"echoNotExists34345", "Hello World!"},
+	}
+	err := RunDockerExec(ctx, nil, container.ID, execConfig)
+	if err == nil {
+		t.Error("Exec run did not fail when expected")
+	}
+	var errBadExit *ErrorExecCmdBadExit
+	if !errors.As(err, &errBadExit) {
+		t.Error("A non-expected error was thrown:\n ", err)
 	}
 }
 
