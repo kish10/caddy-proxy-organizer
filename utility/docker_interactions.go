@@ -107,9 +107,9 @@ type ErrorExecCmdBadExit struct {
 
 func (e *ErrorExecCmdBadExit) Error() string {
     return fmt.Sprintf(
-		"\nTried to run command:\n %s\n On containerId %s, but got exit code %d, run output:\n%s\n",
-		e.ContainerId,
+		"\nTried to run command:\n %s\nOn containerId:%s\nBut got exit code %d\nOutput from running the command:\n%s\n",
 		e.Cmd,
+		e.ContainerId,
 		e.ExitCode,
 		e.CmdOutput,
 	)
