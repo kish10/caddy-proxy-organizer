@@ -15,6 +15,8 @@ func getEnvVarWithDefault(name string, _default string) string {
 	return value
 }
 
+// -- container labels
+
 func LabelKeyForServerContainers() string {
 	return getEnvVarWithDefault(
 		"LABELS_KEY_FOR_SERVER_CONTAINER",
@@ -36,3 +38,12 @@ func LabelValueForCaddyProxyOrganizerContainer() string {
 	)
 }
 
+
+// -- necessary file paths
+
+func pathCaddyProxyConfigJson() string {
+	return getEnvVarWithDefault(
+		"PATH_CADDY_PROXY_JSON_CONFIG",
+		"/usr/data/caddy_proxy_config/caddy.json",
+	)
+}

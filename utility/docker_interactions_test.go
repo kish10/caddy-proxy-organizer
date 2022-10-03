@@ -8,7 +8,7 @@ import (
 	"github.com/docker/docker/api/types"
 )
 
-const composeFilePath = "../docker-compose--for-test.yaml"
+const composeFilePath = "../example_docker_compose/docker-compose--for-test.yaml"
 var ctx = context.Background()
 const labelKeyServerContainer = "webserver-component"
 const labelValueCaddyProxy = "caddy-proxy"
@@ -98,7 +98,7 @@ func TestRunDockerExec(t *testing.T) {
 	// -- Test if error is thrown when Exec cmd exits ungracefully
 
 	execConfig = types.ExecConfig{
-		Cmd: []string{"echoNotExists34345", "Hello World!"},
+		Cmd: []string{"echoNotExists", "Hello World!"},
 	}
 	err := RunDockerExec(ctx, nil, container.ID, execConfig)
 	if err == nil {

@@ -7,13 +7,14 @@ import (
 	"github.com/kish10/caddy-proxy-organizer/utility"
 )
 
-const composeFilePath = "docker-compose--for-test.yaml"
 var ctx = context.Background()
+const pathComposeFile = "./example_docker_compose/docker-compose--for-test.yaml"
+// const pathCadyProxyJson = "caddy--for-test.json"
 
 func TestGetCaddyProxyContainer(t *testing.T) {
 	utility.RunDockerComposeUp(
 		ctx, 
-		utility.RunDockerComposeParams{[]string{composeFilePath}, false},
+		utility.RunDockerComposeParams{[]string{pathComposeFile}, false},
 	)
 
 	caddyContainer := GetCaddyProxyContainer(ctx, nil)
@@ -32,4 +33,9 @@ func TestGetCaddyProxyContainer(t *testing.T) {
 			LabelValueForCaddyProxyContainer(),
 		)
 	}
+}
+
+func TestLoadCaddyProxyJson(t *testing.T) {
+	// -- Test if compiles
+	LoadCaddyProxyJson(ctx, nil, pathCadyProxyJson)
 }

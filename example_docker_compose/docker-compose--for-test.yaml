@@ -1,0 +1,31 @@
+services: 
+  caddy-proxy:
+    # image: caddy:latest
+    build:
+      context: '../'
+      dockerfile: ./example_docker_compose/Dockerfile--for-test--caddy-proxy
+    labels:
+      webserver-component: 'caddy-proxy'
+    volumes:
+      - caddy-proxy-data:/data
+      - caddy-proxy-config:/config
+  caddy-organizer:
+    build:
+      context: '../'
+      dockerfile: ./example_docker_compose/Dockerfile--for-test--caddy-proxy-organizer
+    depends_on: ["caddy-proxy"]
+    labels:
+      webserver-component: 'caddy-proxy-organizer'
+    volumes_from:
+      - 'caddy-proxy'
+
+# References:
+# - https://docs.docker.com/compose/compose-file/compose-file-v3/#volume-configuration-reference
+# - https://docs.docker.com/storage/volumes/
+# - https://stackoverflow.com/a/40030535
+volumes:
+  caddy-proxy-data:
+  caddy-proxy-config:
+    # type: local
+    # device: /home/k/.caddy_proxy_organizer/caddy_proxy_config
+    # o: bind

@@ -180,7 +180,7 @@ func RunDockerExec(ctx context.Context, cli *client.Client, containerId string, 
 			ExitCode: execExitCode,
 		}
 	} else {
-		InfoLog.Printf("\nCommand ran through Docker Exec exited gracefully (exit code: %d) ", responseExecInspect.ExitCode)
+		InfoLog.Printf("\nCommand ran via Docker Exec exited gracefully (exit code: %d) ", responseExecInspect.ExitCode)
 	}
 
 	return nil

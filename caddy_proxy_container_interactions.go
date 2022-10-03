@@ -13,7 +13,6 @@ func GetCaddyProxyContainer(ctx context.Context, cli *client.Client) types.Conta
 		LabelKeyForServerContainers(),
 		LabelValueForCaddyProxyContainer(),
 	}
-	utility.InfoLog.Printf("LabelKeyForServerContainers: %s", LabelKeyForServerContainers())
 
 	containers := utility.GetContainersByLabel(ctx, cli, labelKeyValue)
 	if len(containers) == 0 {
@@ -21,4 +20,25 @@ func GetCaddyProxyContainer(ctx context.Context, cli *client.Client) types.Conta
 	}
 
 	return containers[0]
+}
+
+
+
+func LoadCaddyProxyJson(ctx context.Context, cli *client.Client, ) {
+	// pathCadyProxyJson string
+	// if pathCadyProxyJson == "" {
+	// 	pathCadyProxyJson = pathCaddyProxyConfigJson()
+	// }
+
+	caddyContainer := GetCaddyProxyContainer(ctx, cli)
+	execConfig := types.ExecConfig{
+		AttachStdin:  true,
+		AttachStderr: true,  
+		Cmd: ApiCaddyLoadCmd(pathCaddyProxyConfigJson()),
+	}
+
+	err := utility.RunDockerExec(ctx, cli, caddyContainer.ID, execConfig)
+	if err != nil {
+		panic(err)
+	}
 }
