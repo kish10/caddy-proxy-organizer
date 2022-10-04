@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"text/template"
 
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/api/types"
@@ -22,19 +24,24 @@ func GetCaddyProxyContainer(ctx context.Context, cli *client.Client) types.Conta
 	return containers[0]
 }
 
+func parseCaddyConfigTemplate() string {
+	templateJson, err := template.ParseFiles(pathCaddyProxyConfigJsonTemplate())
+	if err != nil {
+		panic(err)
+	}
 
+	var buf bytes.Buffer
+	templateJson.Execute(&buf, nil)
+
+	return buf.String()
+}
 
 func LoadCaddyProxyJson(ctx context.Context, cli *client.Client) {
-	// pathCadyProxyJson string
-	// if pathCadyProxyJson == "" {
-	// 	pathCadyProxyJson = pathCaddyProxyConfigJson()
-	// }
-
 	caddyContainer := GetCaddyProxyContainer(ctx, cli)
 	execConfig := types.ExecConfig{
 		AttachStdin:  true,
 		AttachStderr: true,  
-		Cmd: ApiCaddyLoadCmd(pathCaddyProxyConfigJson()),
+		Cmd: ApiCaddyLoadCmd("", parseCaddyConfigTemplate()),
 	}
 
 	err := utility.RunDockerExec(ctx, cli, caddyContainer.ID, execConfig)

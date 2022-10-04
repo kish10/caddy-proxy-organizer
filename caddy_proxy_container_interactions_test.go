@@ -12,6 +12,8 @@ const pathComposeFile = "./example_docker_compose/docker-compose--for-test.yaml"
 // const pathCadyProxyJson = "caddy--for-test.json"
 
 func TestGetCaddyProxyContainer(t *testing.T) {
+
+	// -- Make sure containers are running
 	utility.RunDockerComposeUp(
 		ctx, 
 		utility.RunDockerComposeParams{[]string{pathComposeFile}, false},
@@ -35,7 +37,22 @@ func TestGetCaddyProxyContainer(t *testing.T) {
 	}
 }
 
+func TestParseCaddyConfigTemplate(t *testing.T) {
+	// -- Test if can get a non-empty string back
+	config := parseCaddyConfigTemplate()
+	if config == "" {
+		t.Error("parseCaddyConfigTemplate returned empty string")
+	}
+}
+
 func TestLoadCaddyProxyJson(t *testing.T) {
+	// -- Make sure containers are running
+	utility.RunDockerComposeUp(
+		ctx, 
+		utility.RunDockerComposeParams{[]string{pathComposeFile}, false},
+	)
+
 	// -- Test if compiles
 	LoadCaddyProxyJson(ctx, nil)
 }
+

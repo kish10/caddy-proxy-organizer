@@ -41,6 +41,10 @@ func LabelValueForCaddyProxyOrganizerContainer() string {
 
 // -- necessary file paths
 
+func pathCaddyProxyConfigJsonTemplate() string {
+	return "caddy-config-template.json"
+}
+
 func pathCaddyProxyConfigJson() string {
 	return getEnvVarWithDefault(
 		"PATH_CADDY_PROXY_JSON_CONFIG",
