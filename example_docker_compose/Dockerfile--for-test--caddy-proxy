@@ -1,0 +1,5 @@
+FROM caddy:latest
+
+RUN apk --no-cache add curl
+
+CMD ["caddy", "run"]

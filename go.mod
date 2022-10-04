@@ -23,3 +23,5 @@ require (
 	golang.org/x/tools v0.1.12 // indirect
 	gotest.tools/v3 v3.3.0 // indirect
 )
+
+replace github.com/kish10/caddy-proxy-organizer/utility => ./utility
