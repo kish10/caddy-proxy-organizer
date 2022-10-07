@@ -1,0 +1,23 @@
+services:
+  
+  consul-server:
+    image: consul
+    networks:
+      - consul
+  consul-template:
+    build:
+      context: .
+      dockerfile: Dockerfile--for-test--consul-template
+    networks:
+      - consul
+    volumes:
+      - ./data:/data
+      # Note: 
+      # - To delete /data/results.txt do:
+      #     - `docker build -t test-ct -f Dockerfile--for-test--consul-template .`
+      #     - `docker run -v "$(pwd)"/data:/data -it --network approach2_consul test-ct ash`
+      #     - In consule-template continaer `rm /data/results.txt`
+
+networks:
+  consul:
+    driver: bridge

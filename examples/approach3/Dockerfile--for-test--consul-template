@@ -1,0 +1,26 @@
+FROM alpine:latest
+
+ENV CT_EXECUTABLE_DIR='/usr/src/consul-template'
+WORKDIR $CT_EXECUTABLE_DIR
+
+# This the release of consule-template to get
+ENV CT_VERSION=0.29.5
+
+RUN wget https://releases.hashicorp.com/consul-template/0.29.5/consul-template_${CT_VERSION}_linux_amd64.zip && \
+    unzip consul-template_${CT_VERSION}_linux_amd64.zip && \
+    rm consul-template_${CT_VERSION}_linux_amd64.zip
+    
+ENV PATH $PATH:$CT_EXECUTABLE_DIR
+
+# For debugging
+RUN apk --no-cache add curl
+
+RUN mkdir /data /data_not_for_external_mount
+
+# Note: If put template.tpl in /data which will be externally mounted, then /data/template.tpl would get deleted
+# - Since files created during build don't mount to the host directory (unless using named volumes)
+# - Reference: https://stackoverflow.com/a/53556042
+RUN echo 'Consul nodes: {{ with node }}- Node Address: {{ .Node.Address }}{{ end }}' > /data_not_for_external_mount/template.tpl
+
+
+CMD ["consul-template", "-consul-addr", "consul-server:8500", "-template", "/data_not_for_external_mount/template.tpl:/data/result.txt:cat /data/result.txt"]

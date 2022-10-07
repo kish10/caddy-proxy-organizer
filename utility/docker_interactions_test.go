@@ -8,7 +8,7 @@ import (
 	"github.com/docker/docker/api/types"
 )
 
-const composeFilePath = "../example_docker_compose/docker-compose--for-test.yaml"
+const composeFilePath = "../examples/approach1/docker-compose--for-test.yaml"
 var ctx = context.Background()
 const labelKeyServerContainer = "webserver-component"
 const labelValueCaddyProxy = "caddy-proxy"
