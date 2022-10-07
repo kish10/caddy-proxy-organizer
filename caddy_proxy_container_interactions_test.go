@@ -8,7 +8,7 @@ import (
 )
 
 var ctx = context.Background()
-const pathComposeFile = "./example_docker_compose/docker-compose--for-test.yaml"
+const pathComposeFile = "./examples/approach1/docker-compose--for-test.yaml"
 // const pathCadyProxyJson = "caddy--for-test.json"
 
 func TestGetCaddyProxyContainer(t *testing.T) {
