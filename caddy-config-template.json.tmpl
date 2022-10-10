@@ -1,0 +1,59 @@
+{
+	"admin": {
+		"listen": "0.0.0.0:2019"
+	},
+	"apps": {
+		"http": {
+			"servers": {
+				"example": {
+					"listen": [":2015"],
+					"routes": [
+						{
+							"handle": [{
+								"handler": "static_response",
+								"body": "Hello, world!"
+							}]
+						}
+					]
+				}
+				{{- if services -}}
+				,
+				"reverse-proxy": {
+					"listen": [":2016"],
+					"routes": [
+						{{- range services -}}
+						{
+							"match": [{"host": ["{{.Domain}}"]}],
+							"handle": [
+								{
+									"handler": "reverse_proxy",
+									"upstreams": [
+										{{- $Name := .Name -}}
+										{{- range $index, $Port := .Ports -}}
+										{{if $index}},{{end}}
+										{{- if $Port -}}
+										{
+											"dial": "{{$Name}}:{{$Port}}"
+										}
+										{{- else -}}
+										{
+											"dial": "{{$Name}}"
+										}
+										{{- end -}}
+										
+										{{- end -}}
+									]
+								}
+							]
+						}
+						{{- end -}}
+					],
+					"automatic_https":{
+						"disable": true
+					}
+				}
+				{{- end -}}
+			}
+		}
+	}
+}

@@ -183,7 +183,6 @@ func RunDockerExec(ctx context.Context, cli *client.Client, containerId string, 
 }
 
 
-
 func StopContainersByLabel(ctx context.Context, cli *client.Client, labelKeyValue []string) {
 	
 	if cli == nil {

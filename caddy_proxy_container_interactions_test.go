@@ -9,10 +9,9 @@ import (
 
 var ctx = context.Background()
 const pathComposeFile = "./examples/approach1/docker-compose--for-test.yaml"
-// const pathCadyProxyJson = "caddy--for-test.json"
+const pathCadyProxyJson = "caddy--for-test.json"
 
 func TestGetCaddyProxyContainer(t *testing.T) {
-
 	// -- Make sure containers are running
 	utility.RunDockerComposeUp(
 		ctx, 
@@ -39,9 +38,9 @@ func TestGetCaddyProxyContainer(t *testing.T) {
 
 func TestParseCaddyConfigTemplate(t *testing.T) {
 	// -- Test if can get a non-empty string back
-	config := parseCaddyConfigTemplate()
+	config := ParseCaddyConfigTemplate(ctx, nil)
 	if config == "" {
-		t.Error("parseCaddyConfigTemplate returned empty string")
+		t.Error("ParseCaddyConfigTemplate returned empty string")
 	}
 }
 

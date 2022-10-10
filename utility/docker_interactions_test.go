@@ -86,7 +86,7 @@ func TestRunDockerExec(t *testing.T) {
 		[]string{labelKeyServerContainer, labelValueCaddyProxy},
 	)[0]
 
-
+	
 	// -- Test if Exec command can succeed
 
 	execConfig := types.ExecConfig{
