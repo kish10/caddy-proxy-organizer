@@ -1,28 +1,62 @@
 services: 
   caddy-proxy:
     build:
-      context: '../'
-      dockerfile: ./example_docker_compose/Dockerfile--for-test--caddy-proxy
-    depends_on: 
-      ['consul-server']
+      context: '../../'
+      dockerfile: './examples/approach1/Dockerfile--for-test--caddy-proxy'
     labels:
       webserver-component: 'caddy-proxy'
     ports:
       - "2015:2015" # For externally run test `curl localhost:2015`
+      - "2016:2016" # Reverse proxy
+      - "2019:2019" # Caddy API
     volumes:
       - caddy-proxy-data:/data
       - caddy-proxy-config:/config
-    
+    networks:
+      - caddy-proxy-external-network
+
   caddy-organizer:
     build:
-      context: '../'
-      dockerfile: ./example_docker_compose/Dockerfile--for-test--caddy-proxy-organizer
+      context: '../../'
+      dockerfile: './examples/approach1/Dockerfile--for-test--caddy-proxy-organizer'
     depends_on: 
-      ['consul-server', 'caddy-proxy']
+      ['caddy-proxy']
+    environment:
+      - PATH_TO_CADDY_PROXY_ORGANIZER_DIR='../../'
+      # UID retived using `$(id -u ${USER})`
+      - UID=1000
+      # DOCKER_GROUP_ID retrieved using `$(getent group docker | cut -d: -f3)`
+      # Reference: 
+      # - https://lindevs.com/get-group-id-gid-in-linux/
+      - DOCKER_GROUP_ID=996
     labels:
       webserver-component: 'caddy-proxy-organizer'
+    # Note: Need DOCKER_GROUP_ID to access the docker socket
+    # - Assuming the group with DOCKER_GROUP_ID has access to the docker socket
+    user: '$UID:$DOCKER_GROUP_ID' 
+    volumes:
+      # Need access to docker socker to use the Docker Engine API 
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
     volumes_from:
       - 'caddy-proxy'
+    
+  hello-test-app:
+    image: nginx:alpine
+    # build: '../../'
+    expose: 
+      - '80'
+    ports:
+      - '80' # Defines PrivatePort accessible on the user-defined network similar to ':80'
+    labels:
+      webserver-component: "service"
+      # Note: caddy-proxy-organizer expects domain specified as label instead of environment variable.
+      # - This is inorder to avoid an extra docker call (docker container inspect <id>)
+      webserver-service-domain: hello.patel.blue.localhost 
+    volumes:
+      - ${PWD}/examples/test_apps/hello_app:/usr/share/nginx/html:ro
+    networks:
+      - caddy-proxy-external-network
+    restart: unless-stopped
 
 volumes:
   caddy-proxy-data:
@@ -37,5 +71,7 @@ volumes:
 
 
 networks:
-  consul:
+  # Note: caddy-proxy-organizer actually expects the name `caddy-proxy-external-network`
+  # - Can change it using environment files, see `constants.go` for reference
+  caddy-proxy-external-network:
     driver: bridge

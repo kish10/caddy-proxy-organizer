@@ -38,11 +38,34 @@ func LabelValueForCaddyProxyOrganizerContainer() string {
 	)
 }
 
+func LabelValueForServiceContainer() string {
+	return getEnvVarWithDefault(
+		"LABELS_VALUE_FOR_SERVICE_CONTAINER",
+		"service",
+	)
+}
+
+func LabelKeyForServiceDomain() string {
+	return getEnvVarWithDefault(
+		"LABELS_KEY_FOR_SERVICE_DOMAIN",
+		"webserver-service-domain",
+	)
+}
+
+// -- container network names
+
+func NetworkNameForCaddyProxyExternal() string {
+	return getEnvVarWithDefault(
+		"NETWORK_NAME_FOR_CADDY_PROXY_EXTERNAL",
+		"caddy-proxy-external-network",
+	)
+}
+
 
 // -- necessary file paths
 
 func pathCaddyProxyConfigJsonTemplate() string {
-	return "caddy-config-template.json"
+	return "caddy-config-template.json.tmpl"
 }
 
 func pathCaddyProxyConfigJson() string {

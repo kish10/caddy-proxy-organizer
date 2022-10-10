@@ -125,12 +125,8 @@ func RunDockerExec(ctx context.Context, cli *client.Client, containerId string, 
 		cli = GetDockerClient()
 	}
 	
-	// NOTE (2022-10-02): At the moment these are not needed for ContainerExecAttach
-	// DO NOT DELETE: Left as reference
-	// DELETE WHEN : Discover that the settings are independent to ContainerExecAttach (or when comfortable) 
-	// execConfig.AttachStdin = true
-	// execConfig.AttachStderr = true
-
+	execConfig.AttachStdout = true
+	execConfig.AttachStderr = true
 
 	// -- Run command on the container using Docker Exec
 	InfoLog.Printf(
@@ -151,7 +147,7 @@ func RunDockerExec(ctx context.Context, cli *client.Client, containerId string, 
 	scanner := bufio.NewScanner(responseExecAttach.Reader)
 	attachBufferOutput := ""
 	for scanner.Scan() {
-		attachBufferOutput = attachBufferOutput + scanner.Text()
+		attachBufferOutput = attachBufferOutput + scanner.Text() + "\n"
 	}
 	InfoLog.Print("\nExec Attach output:\n", attachBufferOutput)
 
@@ -185,7 +181,6 @@ func RunDockerExec(ctx context.Context, cli *client.Client, containerId string, 
 
 	return nil
 }
-
 
 
 func StopContainersByLabel(ctx context.Context, cli *client.Client, labelKeyValue []string) {
